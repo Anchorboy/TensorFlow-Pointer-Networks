@@ -3,13 +3,11 @@
 
 from __future__ import absolute_import, division, print_function
 
-import random
-
 import numpy as np
 import tensorflow as tf
 
+from bak.pointer import pointer_decoder
 from dataset import DataGenerator
-from pointer import pointer_decoder
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
