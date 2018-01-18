@@ -11,13 +11,12 @@ from model import PointerNetworks
 
 def do_train(args):
     tf.logging.info("Training rnn model")
-    args.mode = "train"
     config = Config(args)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_id
 
     tf.logging.info('loading')
     data_loader = DataLoader(config)
-    data_loader.read_data(args.name)
+    data_loader.read_data(args.file_path)
 
     tf.logging.info('building')
     # train_data, train_labels, train_mask
@@ -31,7 +30,7 @@ def do_train(args):
         saver = tf.train.Saver()
 
         tf_config = tf.ConfigProto()
-        tf_config.gpu_options.per_process_gpu_memory_fraction = 0.3
+        tf_config.gpu_options.per_process_gpu_memory_fraction = 0.45
         with tf.Session(config=tf_config) as session:
             session.run(init)
             model.fit(session, saver, data_loader)
@@ -40,10 +39,11 @@ def do_evaluate(args):
     tf.logging.info("Evaluating rnn model")
     args.mode = "test"
     config = Config(args)
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_id
 
-    print(" -- loading -- ")
-    data_loader = DataLoader("processed")
-    data_loader.read_data(args.name)
+    tf.logging.info('loading')
+    data_loader = DataLoader(config)
+    data_loader.read_data(args.file_path)
 
     with tf.Graph().as_default():
         tf.logging.info("Building model...", )
@@ -56,11 +56,12 @@ def do_evaluate(args):
         saver = tf.train.Saver()
 
         tf_config = tf.ConfigProto()
-        tf_config.gpu_options.per_process_gpu_memory_fraction = 0.3
+        tf_config.gpu_options.per_process_gpu_memory_fraction = 0.45
         with tf.Session(config=tf_config) as session:
             session.run(init)
             saver.restore(session, model.config.model_output)
             tf.logging.info("Evaluating test set")
+            model.evaluate(session, data_loader)
                 # preds = model.evaluate_test(session, data_loader)
 
 def main():
@@ -70,6 +71,7 @@ def main():
     command_parser = subparsers.add_parser('train', help='')
     command_parser.add_argument('-gpu', '--gpu_id', default="1", help="GPU id.")
     command_parser.add_argument('-fp', '--file_path', default="tsp5", help="File path.")
+    command_parser.add_argument('-n', '--tsp_num', default=5, type=int, help="TSP n")
     command_parser.add_argument('-is_train', '--is_train', default=True, type=bool, help="Training mode.")
     command_parser.set_defaults(func=do_train)
 
@@ -77,6 +79,7 @@ def main():
     command_parser.add_argument('-m', '--model-path', help="Training data")
     command_parser.add_argument('-gpu', '--gpu_id', default="1", help="GPU id.")
     command_parser.add_argument('-fp', '--file_path', default="tsp5", help="File path.")
+    command_parser.add_argument('-n', '--tsp_num', default=5, type=int, help="TSP n")
     command_parser.add_argument('-is_train', '--is_train', default=True, type=bool, help="Training mode.")
     command_parser.set_defaults(func=do_evaluate)
 
